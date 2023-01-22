@@ -59,14 +59,15 @@ void phrase2() {
 }
 
 void loop() {
-
- int K = 2000;
-  char key = keypad.getKey();
+  char key;
+  int K = 2000;
+  key = keypad.getKey();
 
   if (key) {
     Serial.print("Key ");
-    Serial.print(key);
-    Serial.println(" is pressed");
+    Serial.println(key);
+  } else {
+    return;
   }
 
   switch (key) {
@@ -109,5 +110,5 @@ void loop() {
   }
 
   noTone(speakerPin);
-  delay(random(2000, 4000));
+  // delay(random(2000, 4000));
 }
