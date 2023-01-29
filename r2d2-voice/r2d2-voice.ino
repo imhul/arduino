@@ -1,7 +1,7 @@
+#include <Keypad.h>
+
 #define speakerPin 11
 #define ledPin 13
-
-#include <Keypad.h>
 
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -58,10 +58,21 @@ void phrase2() {
   }
 }
 
-void loop() {
-  char key;
+void phrase3(int count) {
   int K = 2000;
-  key = keypad.getKey();
+
+  for (int i = 0; i <= count; i++) {
+    digitalWrite(ledPin, HIGH);
+    tone(speakerPin, K + random(-1700, 2000));
+    delay(random(70, 170));
+    digitalWrite(ledPin, LOW);
+    noTone(speakerPin);
+    delay(random(0, 30));
+  }
+}
+
+void loop() {
+  char key = keypad.getKey();
 
   if (key) {
     Serial.print("Key ");
@@ -71,44 +82,40 @@ void loop() {
   }
 
   switch (key) {
-    case 1:
+    case '*':
+    case '#':
+    case 'A':
+    case 'B':
+    case 'C':
+    case 'D':
+    case '1':
+    case '0':
       phrase1();
       break;
-    case 2:
+    case '2':
       phrase2();
       break;
-    case 3:
-      phrase1();
-      phrase2();
+    case '3':
+      phrase3(3);
       break;
-    case 4:
-      phrase1();
-      phrase2();
-      phrase1();
+    case '4':
+      phrase3(4);
       break;
-    case 5:
-      phrase1();
-      phrase2();
-      phrase1();
-      phrase2();
-      phrase1();
+    case '5':
+      phrase3(5);
       break;
-    case 6:
-      phrase2();
-      phrase1();
-      phrase2();
+    case '6':
+      phrase3(6);
       break;
-  }
-
-  for (int i = 0; i <= random(3, 9); i++) {
-    digitalWrite(ledPin, HIGH);
-    tone(speakerPin, K + random(-1700, 2000));
-    delay(random(70, 170));
-    digitalWrite(ledPin, LOW);
-    noTone(speakerPin);
-    delay(random(0, 30));
+    case '7':
+      phrase3(7);
+      break;
+    case '8':
+      phrase3(8);
+    case '9':
+      phrase3(9);
+      break;
   }
 
   noTone(speakerPin);
-  // delay(random(2000, 4000));
 }
