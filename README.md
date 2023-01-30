@@ -1,15 +1,24 @@
 # Arduino Learning Project
 
+## What the subprojects we was made:
+
+- r2d2 voice generator + matrix keypad 4x4 control
+- servo + joystick control
+- ESP8266 wifi web server
+
+## Additional links
+
 - Arduino Web Site: [http://www.arduino.cc/](http://www.arduino.cc/)
 - Arduino IDE: [http://arduino.cc/en/Main/Software](http://arduino.cc/en/Main/Software)
 - Arduino Documentation: [https://docs.arduino.cc/](https://docs.arduino.cc/)
 - Arduino Ukrainian Store: [https://www.arduino.ua/](https://www.arduino.ua/)
 - Arduino Videos: [https://www.youtube.com/@ArduinoNotes](https://www.youtube.com/@ArduinoNotes)
 
-## What the subprojects we was made:
+## ESP8266
 
-- r2d2 voice generator + matrix keypad 4x4 control
-- servo + joystick control
+Arduino IDE -> File -> Preferences -> Additional Boards Manager URLs:
+
+```http://arduino.esp8266.com/stable/package_esp8266com_index.json```
 
 ## Collaborators
 
