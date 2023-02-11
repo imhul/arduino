@@ -1,0 +1,61 @@
+* {
+    outline: none;
+    box-sizing: border-box;
+    mix-blend-mode: normal;
+}
+
+html {
+    font-family: Helvetica;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden auto;
+}
+
+h1.red {
+    color: #D11D53
+}
+
+.buttonGreen {
+    background-color: #4CAF50;
+    border: 2px solid #000000;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: none;
+    cursor: pointer;
+}
+
+.buttonRed {
+    background-color: #D11D53;
+    border: 2px solid #000000;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: none;
+    cursor: pointer;
+}
+
+.buttonYellow {
+    background-color: #FFD700;
+    border: 2px solid #000000;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: none;
+    cursor: pointer;
+}

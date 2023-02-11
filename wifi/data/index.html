@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>WiFi Control Platform</title>
+    <link rel='stylesheet' href='theme.css' />
+    <script
+        src="https://code.jquery.com/jquery-3.6.3.slim.min.js"
+        integrity="sha256-ZwqZIVdD3iXNyGHbSYdsmWP//UBokj2FHAxKuSBKDSo="
+        crossorigin="anonymous"></script>
+    <script src='app.js'></script>
+</head>
+
+<body>
+    <h1 class='bt'>WiFi Control Platform</h1>
+    <center>
+        <a id='redButton' class='buttonRed' href=" + consoleRedAddr + ">
+            <span id='consoleRedStatus'>RLED：" + outputRedState + "</span>
+        </a>
+        <br><br>
+    </center>
+    <center>
+        <a id='greenButton' class='buttonGreen' href=" + consoleGreenAddr + ">
+            <span>GLED：" + outputGreenState + "</span>
+        </a>
+        <br><br>
+    </center>
+    <center>
+        <a id='blueButton' class='buttonYellow' href=" + consoleYellowAddr + ">
+            <span>YLED：" + outputYellowState + "</span>
+        </a>
+    </center>
+
+    <script>
+        $(document).ready(function () {
+            $('.bt').click(function () {
+                $(this).toggleClass('red');
+            });
+        });
+    </script>
+</body>
+
+</html>
