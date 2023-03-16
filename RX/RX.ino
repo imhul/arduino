@@ -85,37 +85,74 @@
 
 // ************************
 
-#include "SPI.h"      // библиотека для протокола SPI
-#include "nRF24L01.h" // библиотека для nRF24L01+
-#include "RF24.h"     // библиотека для радио модуля
+#include "SPI.h"       // библиотека для протокола SPI
+#include "nRF24L01.h"  // библиотека для nRF24L01+
+#include "RF24.h"      // библиотека для радио модуля
+// #include <Servo.h>
 
-const uint64_t pipe = 0xF0F1F2F3F4LL; // идентификатор передачи
-RF24 radio(9,10); // Для MEGA2560 замените на RF24 radio(9,53);
+const uint64_t pipe = 0xF0F1F2F3F4LL;  // идентификатор передачи
+RF24 radio(9, 10);                     // Для MEGA2560 замените на RF24 radio(9,53);
+byte recieved_data[7];                 // массив принятых данных
+// byte relay = 2;         // реле на 2 цифровом
+// byte servo = 3;         // сервопривод на 3 цифровом
+// byte mosfet = 5;        // мосфет на 5 цифровом (ТУТ ЕСТЬ ШИМ!!!)
 
 void setup() {
-  Serial.begin(9600);  // запускаем последовательный порт
-  radio.begin();       // включаем радио модуль
-  radio.setChannel(0); // выбираем канал (от 0 до 127)
+  Serial.begin(9600);   // запускаем последовательный порт
+  radio.begin();        // включаем радио модуль
+  radio.setChannel(0);  // выбираем канал (от 0 до 127)
 
-    // скорость: RF24_250KBPS, RF24_1MBPS или RF24_2MBPS
-  radio.setDataRate(RF24_1MBPS);
-    // мощность: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM
+  // speed: RF24_250KBPS, RF24_1MBPS or RF24_2MBPS
+  radio.setDataRate(RF24_2MBPS);
+  // power: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM, RF24_PA_HIGH, RF24_PA_MAX
   radio.setPALevel(RF24_PA_HIGH);
 
-  radio.openReadingPipe(1, pipe);    // открываем первую трубу
-  radio.startListening();            // начинаем слушать трубу
+  radio.openReadingPipe(1, pipe);
+  radio.powerUp();
+  radio.startListening();
+  Serial.println("Radio init!");
+  // radio.printDetails();
+  Serial.println("-----------------------");
 }
 
 void loop() {
-  int data;
-  
-  if (radio.available()) {
-    radio.read(&data, sizeof(data)); // читаем данные
-    Serial.print("data: ");
-    Serial.println(data);            // выводим данные на монитор порта
+  // int data;
+  // byte pipeNo;
+
+  // while (radio.available(&pipeNo)) {  // есть входящие данные
+  if (radio.available()) {  // есть входящие данные
+    // чиатем входящий сигнал
+    radio.read(&recieved_data, sizeof(recieved_data));
+
+    Serial.print("button left: ");
+    Serial.println(recieved_data[0]);
+    Serial.print("button right: ");
+    Serial.println(recieved_data[1]);
+    Serial.print("potent: ");
+    Serial.println(recieved_data[2]);
+    Serial.print("X left: ");
+    Serial.println(recieved_data[3]);
+    Serial.print("Y left: ");
+    Serial.println(recieved_data[4]);
+    Serial.print("X right: ");
+    Serial.println(recieved_data[5]);
+    Serial.print("Y right: ");
+    Serial.println(recieved_data[6]);
+    Serial.println("-----------------------");
+    delay(1000);
+
+    // подать на реле сигнал с 0 места массива
+    // digitalWrite(relay, recieved_data[0]);
+
+    // повернуть серво на угол 0..180
+    // значение получено с 1 элемента массива
+    // myservo.write(recieved_data[1]);
+
+    // подать на мосфет ШИМ сигнал
+    // в соответствии с принятыми данными со 2 места массива, диапазон 0...255
+    // analogWrite(mosfet, recieved_data[2]);
   } else {
     Serial.println("ERROR!");
+    delay(1000);
   }
-
-  delay(1000);   
 }

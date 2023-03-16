@@ -1,121 +1,102 @@
-/*   Данный скетч делает следующее: передатчик (TX) отправляет массив
-     данных, который генерируется согласно показаниям с кнопки и с
-     двух потенциомтеров. Приёмник (RX) получает массив, и записывает
-     данные на реле, сервомашинку и генерирует ШИМ сигнал на транзистор.
-    by AlexGyver 2016
-*/
+#include "SPI.h"
+#include "nRF24L01.h"
+#include "RF24.h"
 
-// #include <SPI.h>
-// #include "nRF24L01.h"
-// #include "RF24.h"
+#define SW_pin_left 2  // digital pin connected to switch output
+#define X_pin_left 2   // analog pin connected to X output
+#define Y_pin_left 3   // analog pin connected to Y output
 
-// RF24 radio(9, 10); // "создать" модуль на пинах 9 и 10 Для Уно
-// //RF24 radio(9,53); // для Меги
+#define SW_pin_right 4  // digital pin connected to switch output
+#define X_pin_right 0   // analog pin connected to X output
+#define Y_pin_right 1   // analog pin connected to Y output
 
-// byte address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; //возможные номера труб
+const uint64_t pipe = 0xF0F1F2F3F4LL;  // transmission identifier
+RF24 radio(9, 10);
 
-// byte button = 3;  // кнопка на 3 цифровом
-// byte potent = 0;  // потенциометр на 0 аналоговом
-// byte slider = 1;  // движковый потенциометр на 1 аналоговом пине
+byte potent = 5;
 
-// byte transmit_data[3];  // массив, хранящий передаваемые данные
-// byte latest_data[3];    // массив, хранящий последние переданные данные
-// boolean flag;           // флажок отправки данных
+int valX_left;
+int valY_left;
 
-// void setup() {
-//   Serial.begin(9600);   //открываем порт для связи с ПК
+int valX_right;
+int valY_right;
 
-//   pinMode(button, INPUT_PULLUP); // настроить пин кнопки
-
-//   radio.begin();              // активировать модуль
-//   radio.setAutoAck(1);        // режим подтверждения приёма, 1 вкл 0 выкл
-//   radio.setRetries(0, 15);    // (время между попыткой достучаться, число попыток)
-//   radio.enableAckPayload();   // разрешить отсылку данных в ответ на входящий сигнал
-//   radio.setPayloadSize(32);   // размер пакета, в байтах
-
-//   radio.openWritingPipe(address[0]);  // мы - труба 0, открываем канал для передачи данных
-//   radio.setChannel(0x60);     // выбираем канал (в котором нет шумов!)
-
-//   radio.setPALevel (RF24_PA_MAX);   // уровень мощности передатчика. На выбор RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
-//   radio.setDataRate (RF24_250KBPS); // скорость обмена. На выбор RF24_2MBPS, RF24_1MBPS, RF24_250KBPS
-//   //должна быть одинакова на приёмнике и передатчике!
-//   //при самой низкой скорости имеем самую высокую чувствительность и дальность!!
-
-//   radio.powerUp();       //начать работу
-//   // radio.startListening();   // for test only
-//   // radio.printDetails();  // Вот эта строка напечатает нам что-то, если все правильно соединили.
-
-  
-//   radio.stopListening(); //не слушаем радиоэфир, мы передатчик
-  
-// }
-
-// void loop() {
-//   // инвертированный (!) сигнал с кнопки
-//   transmit_data[0] = !digitalRead(button);
-  
-//   transmit_data[1] = map(analogRead(potent), 0, 1023, 0, 180); // получить значение
-//   // в диапазоне 0..1023, перевести в 0..180, и записать на 1 место в массиве
-//   transmit_data[2] = map(analogRead(slider), 0, 1023, 0, 255);
-
-//   if (radio.available()) Serial.println("radio is available!");
-//   else Serial.println("radio is not available!");
-
-//   Serial.println(String("button: ") + transmit_data[0]);
-//   Serial.println(String("A0: ") + transmit_data[1]);
-//   Serial.println(String("A1: ") + transmit_data[2]);
-//   Serial.println(String("transmit_data[3]: ") + transmit_data[3]);
-
-//   for (int i = 0; i < 3; i++) {               // в цикле от 0 до числа каналов
-//     if (transmit_data[i] != latest_data[i]) { // если есть изменения в transmit_data
-//       flag = 1;                               // поднять флаг отправки по радио
-//       latest_data[i] = transmit_data[i];      // запомнить последнее изменение
-//     }
-//   }
-
-//   if (flag == 1) {
-//     radio.powerUp();    // включить передатчик
-//     radio.write(&transmit_data, sizeof(transmit_data)); // отправить по радио
-//     flag = 0;           //опустить флаг
-//     radio.powerDown();  // выключить передатчик
-//   }
-
-//   delay(1000);
-// }
-
-// ........................
-
-#include "SPI.h"      // библиотека для протокола SPI
-#include "nRF24L01.h" // библиотека для nRF24L01+
-#include "RF24.h"     // библиотека для радио модуля
-
-const uint64_t pipe = 0xF0F1F2F3F4LL; // идентификатор передачи
-RF24 radio(9,10); // Для MEGA2560 замените на RF24 radio(9,53);
-
-byte button = 3;
+byte transmit_data[7];
+byte latest_data[7];
+boolean flag;
 
 void setup() {
-  pinMode(button, INPUT_PULLUP); // настроить пин кнопки
-  // pinMode(A0,INPUT);   // порт для датчика воды
-  Serial.begin(9600);  // запускаем последовательный порт
-  radio.begin();       // включаем радио модуль
-  radio.setChannel(0); // выбираем канал (от 0 до 127)
+  Serial.begin(9600);
 
-    // скорость: RF24_250KBPS, RF24_1MBPS или RF24_2MBPS
-  radio.setDataRate(RF24_1MBPS);
-    // мощность: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM
+  pinMode(SW_pin_left, INPUT);
+  pinMode(X_pin_left, INPUT);
+  pinMode(Y_pin_left, INPUT);
+  pinMode(SW_pin_right, INPUT);
+  pinMode(X_pin_right, INPUT);
+  pinMode(Y_pin_right, INPUT);
+  digitalWrite(SW_pin_left, HIGH); 
+  digitalWrite(SW_pin_right, HIGH); 
+
+  radio.begin();
+  radio.setChannel(0);
+
+  // speed: RF24_250KBPS, RF24_1MBPS or RF24_2MBPS
+  radio.setDataRate(RF24_2MBPS);
+  // power: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM, RF24_PA_HIGH, RF24_PA_MAX
   radio.setPALevel(RF24_PA_HIGH);
 
-  radio.openWritingPipe(pipe);      // открываем трубу на передачу
+  radio.openWritingPipe(pipe);
   radio.stopListening();
+  Serial.println("Radio init!");
+  Serial.println("-----------------------");
+}
+
+void printData(byte data[7]) {
+  Serial.print("button left: ");
+  Serial.println(data[0]);
+  Serial.print("button right: ");
+  Serial.println(data[1]);
+  Serial.print("potent: ");
+  Serial.println(data[2]);
+  Serial.print("X left: ");
+  Serial.println(data[3]);
+  Serial.print("Y left: ");
+  Serial.println(data[4]);
+  Serial.print("X right: ");
+  Serial.println(data[5]);
+  Serial.print("Y right: ");
+  Serial.println(data[6]);
+  Serial.println("-----------------------");
+  delay(1000);
 }
 
 void loop() {
-  int data = digitalRead(button);        // читаем значение с датчика
-  
-  radio.write(&data, sizeof(data)); // отправляем данные и указываем байты
-  
-  Serial.print("data: ");
-  Serial.println(data);             // выводим данные на монитор порта
-  delay(1000);
+  valX_left = analogRead(X_pin_left);
+  valY_left = analogRead(Y_pin_left);
+  valX_right = analogRead(X_pin_right);
+  valY_right = analogRead(Y_pin_right);
+
+  transmit_data[0] = digitalRead(SW_pin_left);
+  transmit_data[1] = digitalRead(SW_pin_right);
+  transmit_data[2] = map(analogRead(potent), 0, 1023, 0, 180);
+  transmit_data[3] = map(valX_left, 0, 1023, 0, 90);
+  transmit_data[4] = map(valY_left, 0, 1023, 0, 90);
+  transmit_data[5] = map(valX_right, 0, 1023, 0, 90);
+  transmit_data[6] = map(valY_right, 0, 1023, 0, 90);
+
+  for (int i = 0; i < 7; i++) {
+    if (transmit_data[i] != latest_data[i]) {
+      flag = 1;
+      latest_data[i] = transmit_data[i];
+    }
+  }
+
+  if (flag == 1) {
+    radio.powerUp();
+    radio.write(&transmit_data, sizeof(transmit_data));
+    flag = 0;
+    radio.powerDown();
+  }
+
+  printData(transmit_data);
 }

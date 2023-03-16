@@ -1,63 +1,102 @@
-#include "SPI.h"      // библиотека для обмена данными по протоколу SPI 
-#include "nRF24L01.h" // библиотека для nRF24L01+
-#include "RF24.h"     // библиотека для радио модуля
+#include <SPI.h>
+#include "nRF24L01.h"
+#include "RF24.h"
+#include "printf.h"
 
-RF24 radio(9,10);  // Для MEGA2560 замените на RF24 radio(9,53);
+//
+// Hardware configuration
+//
+
+// Set up nRF24L01 radio on SPI bus plus pins 9 & 10
+
+RF24 radio(9, 10); //Arduino UNO
+
+//
+// Channel info
+//
+
 const uint8_t num_channels = 128;
 uint8_t values[num_channels];
 
-int serial_putc( char c, FILE * ) {
-  Serial.write( c );
-  return c;
-}
+//
+// Setup
+//
 
-void printf_begin(void) {
-  fdevopen( &serial_putc, 0 );
-}
+void setup(void)
+{
+  //
+  // Print preamble
+  //
 
-void setup(void) {
   Serial.begin(9600);
+  Serial.println("Scanner Air On");
   printf_begin();
+
+  //
+  // Setup and configure rf radio
+  //
+  delay(2000); 
   radio.begin();
   radio.setAutoAck(false);
-  radio.startListening(); // включаем прием сигнала
 
-  radio.printDetails(); // если правильно соединили, то увидите настройки модуля
-  delay(10000); // задержка на 10 секунд
+  // Get into standby mode
+  radio.startListening();
+  radio.printDetails();  
+  delay(5000);              
 
-  radio.stopListening(); // выключаем прием сигнала
-  int i = 0; // вывод заголовков всех 127 каналов
-  while ( i < num_channels )  {
-    printf("%x",i>>4);
+  // Print out header, high then low digit
+  int i = 0;
+  while ( i < num_channels )
+  {
+    printf("%x", i >> 4);
     ++i;
   }
   printf("\n\r");
   i = 0;
-  while ( i < num_channels ) {
-    printf("%x",i&0xf);
+  while ( i < num_channels )
+  {
+    printf("%x", i & 0xf);
     ++i;
   }
   printf("\n\r");
 }
 
+//
+// Loop
+//
+
 const int num_reps = 100;
 
-void loop(void) {
+void loop(void)
+{
+  // Clear measurement values
   memset(values, 0, sizeof(values));
+
+  // Scan all channels num_reps times
   int rep_counter = num_reps;
-  while (rep_counter--) {
+  while (rep_counter--)
+  {
     int i = num_channels;
-    while (i--) {
+    while (i--)
+    {
+      // Select this channel
       radio.setChannel(i);
-      radio.startListening(); // включаем прием сигнала
-      delayMicroseconds(128);
-      radio.stopListening(); // выключаем прием сигнала
+
+      // Listen for a little
+      radio.startListening();
+      delayMicroseconds(512);
+      radio.stopListening();
+
+      // Did we get a carrier?
       if ( radio.testCarrier() )
         ++values[i];
     }
   }
+
+  // Print out channel measurements, clamped to a single hex digit
   int i = 0;
-  while ( i < num_channels ) {
+  while ( i < num_channels )
+  {
     printf("%x", min(0xf, values[i] & 0xf));
     ++i;
   }
