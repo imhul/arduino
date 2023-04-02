@@ -1,5 +1,5 @@
 #include <SPI.h>
-#include "nRF24L01.h"
+// #include "nRF24L01.h"
 #include "RF24.h"
 #include "printf.h"
 
@@ -29,13 +29,24 @@ void setup(void)
   //
 
   Serial.begin(9600);
+
+  while (!Serial) {
+    // some boards need to wait to ensure access to serial over USB
+  }
+
   Serial.println("Scanner Air On");
   printf_begin();
+  delay(2000);
 
   //
   // Setup and configure rf radio
   //
-  delay(2000); 
+  // initialize the transceiver on the SPI bus
+  // if (!radio.begin()) {
+  //   Serial.println(F("radio hardware is not responding!!"));
+  //   while (1) {}  // hold in infinite loop
+  // }
+  
   radio.begin();
   radio.setAutoAck(false);
 
