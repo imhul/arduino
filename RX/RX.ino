@@ -1,25 +1,26 @@
-#include "SPI.h"       // библиотека для протокола SPI
-#include "nRF24L01.h"  // библиотека для nRF24L01+
-#include "RF24.h"      // библиотека для радио модуля
+#include "SPI.h"
+#include "nRF24L01.h"
+#include "RF24.h"
 #include "Servo.h"
 
-const uint64_t pipe = 0xF0F1F2F3F4LL;  // идентификатор передачи
-RF24 radio(7, 8);                      // Для MEGA2560 замените на RF24 radio(9,53);
-byte recieved_data[7];                 // массив принятых данных
+const uint64_t pipe = 0xF0F1F2F3F4LL;  // id
+RF24 radio(7, 8);                      // For MEGA2560 radio(9,53);
+byte recieved_data[7];
 
 Servo leftWingServo;
 Servo servo2;
 Servo servo3;
 
-int leftWingServoState = 45;
-int servo2State = 45;
-int servo3State = 45;
+int leftWingServoState;
+int servo2State;
+int servo3State;
 int angle = 0;
+bool start = 1;
 
 void setup() {
-  Serial.begin(9600);   // запускаем последовательный порт
-  radio.begin();        // включаем радио модуль
-  radio.setChannel(0);  // выбираем канал (от 0 до 127)
+  Serial.begin(9600);
+  radio.begin();
+  radio.setChannel(0);
 
   // speed: RF24_250KBPS, RF24_1MBPS or RF24_2MBPS
   radio.setDataRate(RF24_2MBPS);
@@ -33,7 +34,7 @@ void setup() {
   Serial.println("-----------------------");
 
   leftWingServo.attach(2);  // brown
-  // leftWingServo.write(45);
+  leftWingServo.write(45);
   // servo2.attach(3); // white
   // servo3.attach(4); // violet
 
@@ -58,7 +59,6 @@ void printResponse(byte data[7]) {
   Serial.print("Y right: ");
   Serial.println(recieved_data[6]);
   Serial.println("-----------------------");
-  // delay(1000);
 }
 
 void loop() {
@@ -66,9 +66,6 @@ void loop() {
     radio.read(&recieved_data, sizeof(recieved_data));
     printResponse(recieved_data);
 
-    if (leftWingServoState != recieved_data[3]) {
-      leftWingServoState = recieved_data[3];
-    }
 
     if (servo2State != recieved_data[4]) {
       servo2State = recieved_data[4];
@@ -78,46 +75,55 @@ void loop() {
       servo3State = recieved_data[5];
     }
 
-    // leftWingServo.write(leftWingServoState);
+    if (leftWingServoState != recieved_data[3]) {
+      leftWingServoState = recieved_data[3];
 
-    if (leftWingServoState > 45) {
-      Serial.println("-------up---------");
+      if (leftWingServoState > 45) {
+        Serial.println("-------up---------");
 
-      for (angle = 0; angle < leftWingServoState; angle++) {
-        leftWingServo.write(leftWingServoState - angle);
+        for (angle; angle < leftWingServoState; angle++) {
+          leftWingServo.write(angle);
 
-        Serial.print("in UP FOR ---- ");
-        Serial.print("Value: ");
-        Serial.print(leftWingServoState);
-        Serial.print(", Angle: ");
-        Serial.print(angle);
-        Serial.print(", Calculated: ");
-        Serial.println(leftWingServoState - angle);
+          // Serial.print("in UP FOR ---- ");
+          // Serial.print("Value: ");
+          // Serial.print(leftWingServoState);
+          // Serial.print(", Angle: ");
+          // Serial.print(angle);
+          // Serial.print(", Calculated: ");
+          // Serial.println(leftWingServoState - angle);
 
-        delay(50);
+          delay(50);
+        }
+      } else if (leftWingServoState < 45) {
+        Serial.println("-------down---------");
+
+        for (angle; angle > leftWingServoState; angle--) {
+          leftWingServo.write(angle);
+
+          // Serial.print("in DOWN FOR ---- ");
+          // Serial.print("Value: ");
+          // Serial.print(leftWingServoState);
+          // Serial.print(", Angle: ");
+          // Serial.print(angle);
+          // Serial.print(", Calculated: ");
+          // Serial.println(angle - leftWingServoState);
+
+          delay(50);
+        }
+      } else {
+        Serial.println("Value = 45");
+        angle = 45;
+        leftWingServo.write(angle);
       }
     } else {
-      Serial.println("-------down---------");
-
-      for (angle = 45; angle > leftWingServoState; angle--) {
-        leftWingServo.write(angle - leftWingServoState);
-        
-        Serial.print("in DOWN FOR ---- ");
-        Serial.print("Value: ");
-        Serial.print(leftWingServoState);
-        Serial.print(", Angle: ");
-        Serial.print(angle);
-        Serial.print(", Calculated: ");
-        Serial.println(angle - leftWingServoState);
-
-        delay(50);
-      }
+      Serial.println("Recieved value = Current value");
     }
-
-    leftWingServo.write(leftWingServoState);
-
   } else {
     Serial.println("No signal!");
+    // Serial.print("Value: ");
+    // Serial.print(leftWingServoState);
+    // Serial.print(", Angle: ");
+    // Serial.println(angle);
   }
 
   // servo2.write(servo2State);
