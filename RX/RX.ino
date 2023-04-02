@@ -3,7 +3,7 @@
 #include "RF24.h"
 #include "Servo.h"
 
-const uint64_t pipe = 0xF0F1F2F3F4LL;  // id
+const uint64_t pipe = 0xF0F1F2F3F4LL;  // transmission identifier
 RF24 radio(7, 8);                      // For MEGA2560 radio(9,53);
 byte recieved_data[7];
 
@@ -66,7 +66,6 @@ void loop() {
     radio.read(&recieved_data, sizeof(recieved_data));
     printResponse(recieved_data);
 
-
     if (servo2State != recieved_data[4]) {
       servo2State = recieved_data[4];
     }
@@ -77,53 +76,38 @@ void loop() {
 
     if (leftWingServoState != recieved_data[3]) {
       leftWingServoState = recieved_data[3];
-
       if (leftWingServoState > 45) {
-        Serial.println("-------up---------");
-
+        // up
         for (angle; angle < leftWingServoState; angle++) {
           leftWingServo.write(angle);
-
-          // Serial.print("in UP FOR ---- ");
-          // Serial.print("Value: ");
-          // Serial.print(leftWingServoState);
-          // Serial.print(", Angle: ");
-          // Serial.print(angle);
-          // Serial.print(", Calculated: ");
-          // Serial.println(leftWingServoState - angle);
-
           delay(50);
         }
       } else if (leftWingServoState < 45) {
-        Serial.println("-------down---------");
-
+        // down
         for (angle; angle > leftWingServoState; angle--) {
           leftWingServo.write(angle);
-
-          // Serial.print("in DOWN FOR ---- ");
-          // Serial.print("Value: ");
-          // Serial.print(leftWingServoState);
-          // Serial.print(", Angle: ");
-          // Serial.print(angle);
-          // Serial.print(", Calculated: ");
-          // Serial.println(angle - leftWingServoState);
-
           delay(50);
         }
       } else {
-        Serial.println("Value = 45");
-        angle = 45;
-        leftWingServo.write(angle);
+        // middle
+        if (angle > 45) {
+          for (angle; angle > 45; angle--) {
+            leftWingServo.write(angle);
+            delay(50);
+          }
+        } else {
+          for (angle; angle < 45; angle++) {
+            leftWingServo.write(angle);
+            delay(50);
+          }
+        }
       }
     } else {
-      Serial.println("Recieved value = Current value");
+      // no action needed
+      Serial.println("Recieved value is equivalent to current!");
     }
   } else {
     Serial.println("No signal!");
-    // Serial.print("Value: ");
-    // Serial.print(leftWingServoState);
-    // Serial.print(", Angle: ");
-    // Serial.println(angle);
   }
 
   // servo2.write(servo2State);
