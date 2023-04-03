@@ -1,5 +1,6 @@
 /*
     Arduino and ADXL345 Accelerometer Tutorial
+    https://forum.arduino.cc/t/arduino-uno-and-nano-connect-to-adxl-345-i2c/701646
 */
 #include <Wire.h>  // Wire library - used for I2C communication
 int ADXL345 = 0x53; // The ADXL345 sensor I2C address
