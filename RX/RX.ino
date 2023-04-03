@@ -81,25 +81,25 @@ void loop() {
         // right
         for (tailAngle; tailAngle < tailState; tailAngle++) {
           tail.write(tailAngle);
-          delay(50);
+          delay(25);
         }
       } else if (tailState < 45) {
         // left
         for (tailAngle; tailAngle > tailState; tailAngle--) {
           tail.write(tailAngle);
-          delay(50);
+          delay(25);
         }
       } else {
         // middle
         if (tailAngle > 45) {
           for (tailAngle; tailAngle > 45; tailAngle--) {
             tail.write(tailAngle);
-            delay(50);
+            delay(25);
           }
         } else {
           for (tailAngle; tailAngle < 45; tailAngle++) {
             tail.write(tailAngle);
-            delay(50);
+            delay(25);
           }
         }
       }
@@ -114,25 +114,25 @@ void loop() {
         // up
         for (rightWingAngle; rightWingAngle < rightWingServoState; rightWingAngle++) {
           rightWingServo.write(rightWingAngle);
-          delay(50);
+          delay(25);
         }
       } else if (rightWingServoState < 45) {
         // down
         for (rightWingAngle; rightWingAngle > rightWingServoState; rightWingAngle--) {
           rightWingServo.write(rightWingAngle);
-          delay(50);
+          delay(25);
         }
       } else {
         // middle
         if (rightWingAngle > 45) {
           for (rightWingAngle; rightWingAngle > 45; rightWingAngle--) {
             rightWingServo.write(rightWingAngle);
-            delay(50);
+            delay(25);
           }
         } else {
           for (rightWingAngle; rightWingAngle < 45; rightWingAngle++) {
             rightWingServo.write(rightWingAngle);
-            delay(50);
+            delay(25);
           }
         }
       }
@@ -146,25 +146,25 @@ void loop() {
         // up
         for (leftWingAngle; leftWingAngle < leftWingServoState; leftWingAngle++) {
           leftWingServo.write(leftWingAngle);
-          delay(50);
+          delay(25);
         }
       } else if (leftWingServoState < 45) {
         // down
         for (leftWingAngle; leftWingAngle > leftWingServoState; leftWingAngle--) {
           leftWingServo.write(leftWingAngle);
-          delay(50);
+          delay(25);
         }
       } else {
         // middle
         if (leftWingAngle > 45) {
           for (leftWingAngle; leftWingAngle > 45; leftWingAngle--) {
             leftWingServo.write(leftWingAngle);
-            delay(50);
+            delay(25);
           }
         } else {
           for (leftWingAngle; leftWingAngle < 45; leftWingAngle++) {
             leftWingServo.write(leftWingAngle);
-            delay(50);
+            delay(25);
           }
         }
       }
