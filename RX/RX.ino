@@ -7,15 +7,17 @@ const uint64_t pipe = 0xF0F1F2F3F4LL;  // transmission identifier
 RF24 radio(7, 8);                      // For MEGA2560 radio(9,53);
 byte recieved_data[7];
 
+Servo tail;
 Servo leftWingServo;
-Servo servo2;
-Servo servo3;
+Servo rightWingServo;
 
 int leftWingServoState;
-int servo2State;
-int servo3State;
-int angle = 0;
-bool start = 1;
+int tailState;
+int rightWingServoState;
+
+int leftWingAngle = 0;
+int rightWingAngle = 0;
+int tailAngle = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -26,17 +28,20 @@ void setup() {
   radio.setDataRate(RF24_2MBPS);
   // power: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM, RF24_PA_HIGH, RF24_PA_MAX
   radio.setPALevel(RF24_PA_HIGH);
-
   radio.openReadingPipe(1, pipe);
   radio.powerUp();
   radio.startListening();
   Serial.println("Radio init!");
   Serial.println("-----------------------");
 
-  leftWingServo.attach(2);  // brown
+  leftWingServo.attach(2);   // brown
+  rightWingServo.attach(4);  // violet
+  tail.attach(3);            // white
+
+  // set servos to center
   leftWingServo.write(45);
-  // servo2.attach(3); // white
-  // servo3.attach(4); // violet
+  rightWingServo.write(45);
+  tail.write(45);
 
   delay(2000);
   Serial.println("Servos init!");
@@ -66,50 +71,109 @@ void loop() {
     radio.read(&recieved_data, sizeof(recieved_data));
     printResponse(recieved_data);
 
-    if (servo2State != recieved_data[4]) {
-      servo2State = recieved_data[4];
-    }
+    // start tail moving
+    if (tailState != recieved_data[4]) {
+      tailState = recieved_data[4];
 
-    if (servo3State != recieved_data[5]) {
-      servo3State = recieved_data[5];
-    }
+      // TODO: does not return after moving to the left!
 
-    if (leftWingServoState != recieved_data[3]) {
-      leftWingServoState = recieved_data[3];
-      if (leftWingServoState > 45) {
-        // up
-        for (angle; angle < leftWingServoState; angle++) {
-          leftWingServo.write(angle);
+      if (tailState > 45) {
+        // right
+        for (tailAngle; tailAngle < tailState; tailAngle++) {
+          tail.write(tailAngle);
           delay(50);
         }
-      } else if (leftWingServoState < 45) {
-        // down
-        for (angle; angle > leftWingServoState; angle--) {
-          leftWingServo.write(angle);
+      } else if (tailState < 45) {
+        // left
+        for (tailAngle; tailAngle > tailState; tailAngle--) {
+          tail.write(tailAngle);
           delay(50);
         }
       } else {
         // middle
-        if (angle > 45) {
-          for (angle; angle > 45; angle--) {
-            leftWingServo.write(angle);
+        if (tailAngle > 45) {
+          for (tailAngle; tailAngle > 45; tailAngle--) {
+            tail.write(tailAngle);
             delay(50);
           }
         } else {
-          for (angle; angle < 45; angle++) {
-            leftWingServo.write(angle);
+          for (tailAngle; tailAngle < 45; tailAngle++) {
+            tail.write(tailAngle);
+            delay(50);
+          }
+        }
+      }
+    }
+    // end tail moving
+
+    // start right wing moving
+    if (rightWingServoState != recieved_data[5]) {
+      rightWingServoState = recieved_data[5];
+
+      if (rightWingServoState > 45) {
+        // up
+        for (rightWingAngle; rightWingAngle < rightWingServoState; rightWingAngle++) {
+          rightWingServo.write(rightWingAngle);
+          delay(50);
+        }
+      } else if (rightWingServoState < 45) {
+        // down
+        for (rightWingAngle; rightWingAngle > rightWingServoState; rightWingAngle--) {
+          rightWingServo.write(rightWingAngle);
+          delay(50);
+        }
+      } else {
+        // middle
+        if (rightWingAngle > 45) {
+          for (rightWingAngle; rightWingAngle > 45; rightWingAngle--) {
+            rightWingServo.write(rightWingAngle);
+            delay(50);
+          }
+        } else {
+          for (rightWingAngle; rightWingAngle < 45; rightWingAngle++) {
+            rightWingServo.write(rightWingAngle);
+            delay(50);
+          }
+        }
+      }
+    }
+    // end right wing moving
+
+    // start left wing moving
+    if (leftWingServoState != recieved_data[3]) {
+      leftWingServoState = recieved_data[3];
+      if (leftWingServoState > 45) {
+        // up
+        for (leftWingAngle; leftWingAngle < leftWingServoState; leftWingAngle++) {
+          leftWingServo.write(leftWingAngle);
+          delay(50);
+        }
+      } else if (leftWingServoState < 45) {
+        // down
+        for (leftWingAngle; leftWingAngle > leftWingServoState; leftWingAngle--) {
+          leftWingServo.write(leftWingAngle);
+          delay(50);
+        }
+      } else {
+        // middle
+        if (leftWingAngle > 45) {
+          for (leftWingAngle; leftWingAngle > 45; leftWingAngle--) {
+            leftWingServo.write(leftWingAngle);
+            delay(50);
+          }
+        } else {
+          for (leftWingAngle; leftWingAngle < 45; leftWingAngle++) {
+            leftWingServo.write(leftWingAngle);
             delay(50);
           }
         }
       }
     } else {
       // no action needed
-      Serial.println("Recieved value is equivalent to current!");
+      Serial.println("Left wing: Recieved value is equivalent to current!");
     }
+    // end left wing moving
   } else {
     Serial.println("No signal!");
   }
-
-  // servo2.write(servo2State);
-  // servo3.write(servo3State);
 }
