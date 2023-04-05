@@ -41,7 +41,7 @@ void setup() {
   radio.setChannel(0);
 
   // speed: RF24_250KBPS, RF24_1MBPS or RF24_2MBPS
-  radio.setDataRate(RF24_2MBPS);
+  radio.setDataRate(RF24_250KBPS);
   // power: RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_MED=-6dBM, RF24_PA_HIGH, RF24_PA_MAX
   radio.setPALevel(RF24_PA_HIGH);
 
@@ -78,7 +78,7 @@ void loop() {
 
   transmit_data[0] = digitalRead(SW_pin_left);
   transmit_data[1] = digitalRead(SW_pin_right);
-  transmit_data[2] = map(analogRead(potent), 0, 1023, 0, 180);
+  transmit_data[2] = map(analogRead(potent), 0, 1023, 0, 255);
   transmit_data[3] = map(valX_left, 0, 1023, 0, 90);
   transmit_data[4] = map(valY_left, 0, 1023, 0, 90);
   transmit_data[5] = map(valX_right, 0, 1023, 0, 90);
