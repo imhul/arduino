@@ -2,16 +2,16 @@
 #include "nRF24L01.h"
 #include "RF24.h"
 #include "Servo.h"
-#include "GyverMotor2.h"  // https://github.com/GyverLibs/GyverMotor/blob/main/examples/GyverMotor2/demo/demo.ino
-#include "TimeOut.h"
+// #include "GyverMotor2.h"  // https://github.com/GyverLibs/GyverMotor/blob/main/examples/GyverMotor2/demo/demo.ino
+#include <timeout.h>
 
 // timer
 #define SECOND 1000UL
 #define MINUTE (60 * SECOND)
-TimeOut timeout;
 
 // DC motors
-GMotor2<DRIVER2WIRE> motor(6, 5);
+// GMotor2<DRIVER2WIRE> motor(6, 5);
+int motors = 9;
 int speed = 0;
 
 // radio
@@ -30,11 +30,15 @@ int rightWingServoState;
 
 int leftWingAngle = 0;
 int rightWingAngle = 0;
-int tailAngle = 0;
+
+int servoSpeed = servoSpeed;  // in ms
+int defaultAngle = 45;
 
 // state
 bool printed = false;
 bool noSignal = false;
+bool isReturnAction = false;
+bool timerStarted = false;
 
 void setup() {
   Serial.begin(9600);
@@ -48,7 +52,7 @@ void setup() {
   radio.openReadingPipe(1, pipe);
   radio.powerUp();
   radio.startListening();
-  delay(1000);
+  delay(SECOND);
   Serial.println("Radio init!");
   Serial.println("-----------------------");
 
@@ -57,40 +61,41 @@ void setup() {
   tail.attach(3);            // white
 
   // set servos to center
-  leftWingServo.write(45);
-  rightWingServo.write(45);
-  tail.write(45);
-  delay(1000);
+  leftWingServo.write(defaultAngle);
+  rightWingServo.write(defaultAngle);
+  tail.write(defaultAngle);
+  delay(SECOND);
   Serial.println("Servos init!");
   Serial.println("-----------------------");
-  delay(1000);
+  delay(SECOND);
 
   // set motors
-  motor.setMinDuty(70);
+  // motor.setMinDuty(70);
+  pinMode(motors, OUTPUT);
   Serial.println("Motors init!");
   Serial.println("-----------------------");
-  delay(2000);
+  delay(SECOND);
 }
 
 void printResponse(byte data[7]) {
   if (!printed) {
     printed = true;
     Serial.print("button left: ");
-    Serial.println(recieved_data[0]);
+    Serial.println(data[0]);
     Serial.print("button right: ");
-    Serial.println(recieved_data[1]);
-    Serial.print("potent (motor speed): ");
-    Serial.println(recieved_data[2]);
-    Serial.print("X left: ");
-    Serial.println(recieved_data[3]);
-    Serial.print("Y left: ");
-    Serial.println(recieved_data[4]);
-    Serial.print("X right: ");
-    Serial.println(recieved_data[5]);
-    Serial.print("Y right: ");
-    Serial.println(recieved_data[6]);
+    Serial.println(data[1]);
+    Serial.print("motor speed: ");
+    Serial.println(data[2]);
+    Serial.print("left joystick X: ");
+    Serial.println(data[3]);
+    Serial.print("left joystick Y: ");
+    Serial.println(data[4]);
+    Serial.print("right joystick X: ");
+    Serial.println(data[5]);
+    Serial.print("right joystick Y: ");
+    Serial.println(data[6]);
     Serial.println("-----------------------");
-    delay(1000);
+    delay(SECOND);
     printed = false;
   }
 }
@@ -98,32 +103,19 @@ void printResponse(byte data[7]) {
 void moveTail(int value) {
   tailState = value;
 
-  // TODO: does not return after moving to the left!
-
-  if (tailState > 45) {
+  if (tailState > defaultAngle) {
     // right
-    for (; tailAngle < tailState; tailAngle++) {
+    int tailAngle = defaultAngle;
+    for (tailAngle; tailAngle < tailState; tailAngle++) {
       tail.write(tailAngle);
-      delay(25);
+      delay(servoSpeed);
     }
-  } else if (tailState < 45) {
+  } else if (tailState < defaultAngle) {
     // left
-    for (; tailAngle > tailState; tailAngle--) {
+    int tailAngle = defaultAngle;
+    for (tailAngle; tailAngle > tailState; tailAngle--) {
       tail.write(tailAngle);
-      delay(25);
-    }
-  } else {
-    // middle
-    if (tailAngle > 45) {
-      for (; tailAngle > 45; tailAngle--) {
-        tail.write(tailAngle);
-        delay(25);
-      }
-    } else {
-      for (; tailAngle < 45; tailAngle++) {
-        tail.write(tailAngle);
-        delay(25);
-      }
+      delay(servoSpeed);
     }
   }
 }
@@ -131,29 +123,32 @@ void moveTail(int value) {
 void moveLeftWing(int value) {
   leftWingServoState = value;
 
-  if (leftWingServoState > 45) {
+  if (leftWingServoState > defaultAngle) {
     // up
-    for (; leftWingAngle < leftWingServoState; leftWingAngle++) {
+    for (leftWingAngle; leftWingAngle < leftWingServoState; leftWingAngle++) {
       leftWingServo.write(leftWingAngle);
-      delay(25);
+      Serial.println("moveLeftWing up!");
+      delay(servoSpeed);
     }
-  } else if (leftWingServoState < 45) {
+  } else if (leftWingServoState < defaultAngle) {
     // down
-    for (; leftWingAngle > leftWingServoState; leftWingAngle--) {
+    for (leftWingAngle; leftWingAngle > leftWingServoState; leftWingAngle--) {
       leftWingServo.write(leftWingAngle);
-      delay(25);
+      Serial.println("moveLeftWing down!");
+      delay(servoSpeed);
     }
   } else {
     // middle
-    if (leftWingAngle > 45) {
-      for (; leftWingAngle > 45; leftWingAngle--) {
+    Serial.println("moveLeftWing middle!");
+    if (leftWingAngle > defaultAngle) {
+      for (leftWingAngle; leftWingAngle > defaultAngle; leftWingAngle--) {
         leftWingServo.write(leftWingAngle);
-        delay(25);
+        delay(servoSpeed);
       }
     } else {
-      for (; leftWingAngle < 45; leftWingAngle++) {
+      for (leftWingAngle; leftWingAngle < defaultAngle; leftWingAngle++) {
         leftWingServo.write(leftWingAngle);
-        delay(25);
+        delay(servoSpeed);
       }
     }
   }
@@ -161,30 +156,34 @@ void moveLeftWing(int value) {
 
 void moveRightWing(int value) {
   rightWingServoState = value;
+  int absValue = abs(rightWingServoState - 90);
 
-  if (rightWingServoState > 45) {
-    // up
-    for (; rightWingAngle < rightWingServoState; rightWingAngle++) {
+  if (rightWingServoState > defaultAngle) {
+   // up
+    for (rightWingAngle = 45; rightWingAngle > absValue; rightWingAngle--) {
       rightWingServo.write(rightWingAngle);
-      delay(25);
+      Serial.println("up!");
+      delay(servoSpeed);
     }
-  } else if (rightWingServoState < 45) {
+  } else if (rightWingServoState < defaultAngle) {
     // down
-    for (; rightWingAngle > rightWingServoState; rightWingAngle--) {
+    for (rightWingAngle = 45; rightWingAngle < absValue; rightWingAngle++) {
       rightWingServo.write(rightWingAngle);
-      delay(25);
+      Serial.println("down!");
+      delay(servoSpeed);
     }
   } else {
     // middle
-    if (rightWingAngle > 45) {
-      for (; rightWingAngle > 45; rightWingAngle--) {
+    Serial.println("middle!");
+    if (rightWingAngle > defaultAngle) {
+      for (rightWingAngle; rightWingAngle > defaultAngle; rightWingAngle--) {
         rightWingServo.write(rightWingAngle);
-        delay(25);
+        delay(servoSpeed);
       }
     } else {
-      for (; rightWingAngle < 45; rightWingAngle++) {
+      for (rightWingAngle; rightWingAngle < defaultAngle; rightWingAngle++) {
         rightWingServo.write(rightWingAngle);
-        delay(25);
+        delay(servoSpeed);
       }
     }
   }
@@ -192,44 +191,63 @@ void moveRightWing(int value) {
 
 void rotateMotors(int value) {
   speed = value;
-  motor.setSpeed(speed);
+  // motor.setSpeed(speed);
+  analogWrite(motors, speed);
 }
 
 void returnAction() {
   noSignal = false;
-  Serial.println("Return action!");
-  delay(2000);
+  isReturnAction = true;
+  Serial.println("Return action start!");
+  delay(SECOND * 3);
+  Serial.println("Return action done!");
+  radio.startListening();
+  timerStarted = false;
+  isReturnAction = false;
 }
 
 void noSignalActon() {
-  if (noSignal) return;
-  noSignal = true;
-  Serial.println("No signal!");
-  // TODO: timer
-  timeout.timeOut(2000, returnAction);
+  if (!noSignal) {
+    noSignal = true;
+    Serial.println("No signal!");
+  }
+
+  if (noSignal && !timerStarted) {
+    // start here
+    timerStarted = true;
+  }
 }
 
 void loop() {
-  if (radio.available()) {
+  if (isReturnAction) {
+    Serial.println("Return Action in progress!");
+    delay(SECOND);
+    return;
+  } else if (!isReturnAction && radio.available()) {
     radio.read(&recieved_data, sizeof(recieved_data));
-    // timer
-    timeout.cancel();
+    // timeout.cancel();
+
+    if (recieved_data[0] == 0 && recieved_data[1] == 0 && recieved_data[2] == 0 && recieved_data[3] == 0 && recieved_data[4] == 0 && recieved_data[5] == 0 && recieved_data[6] == 0) {
+      Serial.println("inner else");
+      // noSignalActon();
+      return;
+    }
+
+    noSignal = false;
 
     if (speed != recieved_data[2]) rotateMotors(recieved_data[2]);
 
-    // TODO: adjustment is required: if (tailState != recieved_data[4] && tailState + 5 < recieved_data[4] && tailState - 5 > recieved_data[4]) {
-    if (tailState != recieved_data[4]) moveTail(recieved_data[4]);
+    if (tailState != recieved_data[4] /* && abs(recieved_data[4] - speed) > 5 */) moveTail(recieved_data[4]);
 
-    // TODO: adjustment is required: if (rightWingServoState != recieved_data[5] && rightWingServoState + 5 < recieved_data[5] && rightWingServoState - 5 > recieved_data[5]) {
-    if (rightWingServoState != recieved_data[5]) moveRightWing(recieved_data[5]);
+    if (rightWingServoState != recieved_data[5] /* && abs(recieved_data[5] - rightWingServoState) > 5 */) moveRightWing(recieved_data[5]);
 
-    // TODO: adjustment is required: if (leftWingServoState != recieved_data[3] && leftWingServoState + 5 < recieved_data[3] && leftWingServoState - 5 > recieved_data[3]) {
-    if (leftWingServoState != recieved_data[3]) moveLeftWing(recieved_data[3]);
+    if (leftWingServoState != recieved_data[3] /* && abs(recieved_data[3] - leftWingServoState) > 5 */) moveLeftWing(recieved_data[3]);
 
     printResponse(recieved_data);
-
-  } else {
-    noSignalActon();
-    timeout.handler();
   }
+  //  else {
+  // delay(2000);
+  // Serial.println("outer else");
+  // resetActon();
+  // }
 }
