@@ -190,8 +190,7 @@ void moveRightWing(int value) {
 }
 
 void rotateMotors(int value) {
-  speed = value;
-  // motor.setSpeed(speed);
+  speed = value % 10 == 0 ? value : speed;
   analogWrite(motors, speed);
 }
 
