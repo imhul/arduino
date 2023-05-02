@@ -34,8 +34,8 @@ void setup() {
   pinMode(SW_pin_right, INPUT);
   pinMode(X_pin_right, INPUT);
   pinMode(Y_pin_right, INPUT);
-  digitalWrite(SW_pin_left, HIGH); 
-  digitalWrite(SW_pin_right, HIGH); 
+  digitalWrite(SW_pin_left, HIGH);
+  digitalWrite(SW_pin_right, HIGH);
 
   radio.begin();
   radio.setChannel(0);
@@ -76,8 +76,8 @@ void loop() {
   valX_right = analogRead(X_pin_right);
   valY_right = analogRead(Y_pin_right);
 
-  transmit_data[0] = digitalRead(SW_pin_left);
-  transmit_data[1] = digitalRead(SW_pin_right);
+  transmit_data[0] = !digitalRead(SW_pin_left);
+  transmit_data[1] = !digitalRead(SW_pin_right);
   transmit_data[2] = map(analogRead(potent), 0, 1023, 0, 255);
   transmit_data[3] = map(valX_left, 0, 1023, 0, 90);
   transmit_data[4] = map(valY_left, 0, 1023, 0, 90);

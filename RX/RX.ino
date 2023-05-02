@@ -11,8 +11,10 @@
 
 // DC motors
 // GMotor2<DRIVER2WIRE> motor(6, 5);
-int motors = 9;
+Servo motors;
 int speed = 0;
+int maxSpeed = 2000;  // 2300
+int minSpeed = 800;
 
 // radio
 const uint64_t pipe = 0xF0F1F2F3F4LL;  // transmission identifier
@@ -70,8 +72,13 @@ void setup() {
   delay(SECOND);
 
   // set motors
+  motors.attach(9);
+  motors.writeMicroseconds(maxSpeed);
+  delay(SECOND * 2);
+  motors.writeMicroseconds(minSpeed);
+  delay(SECOND * 6);
   // motor.setMinDuty(70);
-  pinMode(motors, OUTPUT);
+  // pinMode(motors, OUTPUT);
   Serial.println("Motors init!");
   Serial.println("-----------------------");
   delay(SECOND);
@@ -159,7 +166,7 @@ void moveRightWing(int value) {
   int absValue = abs(rightWingServoState - 90);
 
   if (rightWingServoState > defaultAngle) {
-   // up
+    // up
     for (rightWingAngle = 45; rightWingAngle > absValue; rightWingAngle--) {
       rightWingServo.write(rightWingAngle);
       Serial.println("up!");
@@ -190,8 +197,10 @@ void moveRightWing(int value) {
 }
 
 void rotateMotors(int value) {
-  speed = value % 10 == 0 ? value : speed;
-  analogWrite(motors, speed);
+  // speed = value % 10 == 0 ? value : speed;
+  // analogWrite(motors, speed);
+  speed = map(value, 0, 255, minSpeed, maxSpeed);
+  motors.writeMicroseconds(speed);
 }
 
 void returnAction() {
@@ -234,7 +243,7 @@ void loop() {
 
     noSignal = false;
 
-    if (speed != recieved_data[2]) rotateMotors(recieved_data[2]);
+    rotateMotors(recieved_data[2]);
 
     if (tailState != recieved_data[4] /* && abs(recieved_data[4] - speed) > 5 */) moveTail(recieved_data[4]);
 
